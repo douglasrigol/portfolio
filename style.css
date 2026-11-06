@@ -35,9 +35,9 @@
   :root[data-theme="dark"]{ --bg:#000; --text:#f3f5fb; }
 
   *,*::before,*::after{ box-sizing:border-box; }
-  html{ height:100%; scroll-behavior:auto; scroll-padding-top:env(safe-area-inset-top,0px); }
+  html{ min-height:100%; scroll-behavior:auto; scroll-padding-top:env(safe-area-inset-top,0px); }
   body{
-    height:100%;
+    min-height:100%;
     margin:0;
     background:var(--bg);
     color:var(--text);
