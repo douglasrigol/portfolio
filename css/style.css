@@ -708,3 +708,24 @@
     .wake-slider__track{ gap:3px; height:46px; }
     .wake-slider__bar{ height:46px; }
   }
+
+  /* Projetos no celular/tablet: setas saem de cima do card e vão para baixo, na horizontal
+     (seta · contador · seta). No computador continuam na lateral. */
+  @media (max-width:820px){
+    .card-swap{
+      display:grid; grid-template-columns:1fr auto auto auto 1fr; align-items:center;
+      column-gap:1.1rem; row-gap:1.4rem; min-height:0;
+    }
+    .card-swap__stage{
+      grid-column:1 / -1; grid-row:1; position:relative; left:auto; top:auto; transform:none;
+      width:min(100%,430px); justify-self:center; margin-top:3.5rem;
+    }
+    .card-swap__control{
+      position:static; right:auto; top:auto; width:44px; height:44px; grid-row:2;
+      transform:rotate(-90deg);
+    }
+    .card-swap__control:hover,.card-swap__control:focus-visible{ transform:rotate(-90deg) scale(1.08); }
+    .card-swap__control--prev{ grid-column:2; }
+    .card-swap__count{ grid-column:3; grid-row:2; position:static; right:auto; bottom:auto; min-width:4.5em; text-align:center; }
+    .card-swap__control--next{ grid-column:4; }
+  }
