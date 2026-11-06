@@ -67,6 +67,24 @@
       });
     }
 
+    /* Mantém o Lenis sincronizado com a altura real da página (fontes, imagens, FAQ abrindo etc.).
+       Sem isso o limite de rolagem fica desatualizado e o scroll para antes do fim. */
+    if (lenis) {
+      var syncLenis = function(){ lenis.resize(); ScrollTrigger.refresh(); };
+      window.addEventListener('load', syncLenis);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncLenis);
+      document.querySelectorAll('details').forEach(function(item){
+        item.addEventListener('toggle', function(){ window.setTimeout(function(){ lenis.resize(); }, 0); });
+      });
+      if (window.ResizeObserver) {
+        var lastHeight = document.documentElement.scrollHeight;
+        new ResizeObserver(function(){
+          var height = document.documentElement.scrollHeight;
+          if (height !== lastHeight) { lastHeight = height; lenis.resize(); }
+        }).observe(document.body);
+      }
+    }
+
     /* ---------------- mobile nav ---------------- */
     var navToggle = document.getElementById('navToggle');
     var navLinks = document.getElementById('navLinks');
