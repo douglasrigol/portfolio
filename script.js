@@ -67,24 +67,6 @@
       });
     }
 
-    /* Mantém o Lenis sincronizado com a altura real da página (fontes, imagens, FAQ abrindo etc.).
-       Sem isso o limite de rolagem fica desatualizado e o scroll para antes do fim. */
-    if (lenis) {
-      var syncLenis = function(){ lenis.resize(); ScrollTrigger.refresh(); };
-      window.addEventListener('load', syncLenis);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncLenis);
-      document.querySelectorAll('details').forEach(function(item){
-        item.addEventListener('toggle', function(){ window.setTimeout(function(){ lenis.resize(); }, 0); });
-      });
-      if (window.ResizeObserver) {
-        var lastHeight = document.documentElement.scrollHeight;
-        new ResizeObserver(function(){
-          var height = document.documentElement.scrollHeight;
-          if (height !== lastHeight) { lastHeight = height; lenis.resize(); }
-        }).observe(document.body);
-      }
-    }
-
     /* ---------------- mobile nav ---------------- */
     var navToggle = document.getElementById('navToggle');
     var navLinks = document.getElementById('navLinks');
@@ -305,10 +287,12 @@
       var prevButton = root.querySelector('.card-swap__control--prev');
       var count = root.querySelector('.card-swap__count');
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Sempre começa pelo projeto 01 e só troca quando o visitante pedir
+      // (setas, teclado ou arrastando o card). Sem troca automática.
       var order = cards.map(function(_, index){ return index; });
-      var timer = 0;
       var dragging = null;
       var dragged = false;
+      var busy = false;
 
       function render(){
         order.forEach(function(index, position){
@@ -326,14 +310,9 @@
         if (count) count.textContent = String(order[0] + 1).padStart(2, '0') + ' / ' + String(cards.length).padStart(2, '0');
       }
 
-      function schedule(){
-        clearTimeout(timer);
-        if (reduced || document.hidden || root.matches(':hover') || dragging) return;
-        timer = window.setTimeout(function(){ shift(1); }, 4800);
-      }
-
       function shift(direction){
-        if (cards.length < 2 || dragging) return;
+        if (cards.length < 2 || dragging || busy) return;
+        busy = true;
         var front = cards[order[0]];
         front.style.transform = direction > 0 ? 'translate3d(0,120%,0) rotate(5deg)' : 'translate3d(0,-120%,0) rotate(-5deg)';
         front.style.opacity = '0';
@@ -342,7 +321,7 @@
             ? order.slice(1).concat(order[0])
             : [order[order.length - 1]].concat(order.slice(0, -1));
           render();
-          schedule();
+          busy = false;
         }, reduced ? 0 : 420);
       }
 
@@ -351,17 +330,22 @@
         if (event.target.closest('button')) return;
         var front = cards[order[0]];
         if (!event.target.closest('[data-project-card]') || event.target.closest('[data-project-card]') !== front) return;
-        dragging = { id:event.pointerId, startX:event.clientX, startY:event.clientY, dx:0, dy:0 };
+        dragging = { id:event.pointerId, type:event.pointerType, startX:event.clientX, startY:event.clientY, dx:0, dy:0 };
         dragged = false;
-        root.setPointerCapture?.(event.pointerId);
         front.style.transition = 'none';
-        event.preventDefault();
+        // No toque, não bloqueia nada: a rolagem vertical continua sendo da página.
+        if (event.pointerType === 'mouse') {
+          root.setPointerCapture?.(event.pointerId);
+          event.preventDefault();
+        }
       }
 
       function onMove(event){
         if (!dragging || dragging.id !== event.pointerId) return;
+        var isMouse = dragging.type === 'mouse';
         dragging.dx = event.clientX - dragging.startX;
-        dragging.dy = event.clientY - dragging.startY;
+        // No celular o card só acompanha o dedo na horizontal.
+        dragging.dy = isMouse ? event.clientY - dragging.startY : 0;
         if (Math.hypot(dragging.dx, dragging.dy) > 5) dragged = true;
         var front = cards[order[0]];
         front.style.transform = 'translate3d(' + dragging.dx + 'px,' + dragging.dy + 'px,0) rotate(' + (dragging.dx * .025) + 'deg)';
@@ -373,9 +357,10 @@
         dragging = null;
         var front = cards[order[0]];
         front.style.transition = '';
-        if (Math.hypot(drag.dx, drag.dy) > 70) shift(drag.dx < 0 || drag.dy < 0 ? 1 : -1);
+        // pointercancel = o navegador assumiu a rolagem da página: só devolve o card ao lugar.
+        var distance = Math.hypot(drag.dx, drag.dy);
+        if (event.type !== 'pointercancel' && distance > 70) shift(drag.dx < 0 || drag.dy < 0 ? 1 : -1);
         else render();
-        schedule();
         window.setTimeout(function(){ dragged = false; }, 0);
       }
 
@@ -392,10 +377,7 @@
         if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { event.preventDefault(); shift(1); }
         if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { event.preventDefault(); shift(-1); }
       });
-      document.addEventListener('visibilitychange', schedule);
-      root.addEventListener('mouseleave', schedule);
       render();
-      schedule();
     }
     initProjectCardSwap();
 
