@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body class="manrope-text">
 
@@ -164,10 +164,31 @@
               <img class="card-swap__media" src="assets/projetos/sailor-moon.webp" alt="Capa do site Moon Prism, com frasco de perfume 3D inspirado em Sailor Moon" width="960" height="1200" decoding="async" draggable="false"><span class="card-swap__shade"></span>
               <span class="card-swap__body"><small>Experiência · 3D</small><strong>Sailor Moon</strong><span>Uma experiência visual inspirada no universo lunar.</span></span>
             </a>
+
+            <!-- ===== PRÓXIMOS PROJETOS (bloqueados) =====
+                 Para liberar um card quando o projeto estiver no ar:
+                 1. troque <div ...> por <a ... href="LINK-DA-VERCEL" target="_blank" rel="noopener"> (e </div> por </a>)
+                 2. tire a classe "is-locked" e apague a linha <span class="card-swap__lock">
+                 3. troque a imagem de capa e os textos -->
+            <div class="card-swap__card is-locked" data-project-card data-title="Novo projeto" role="group" aria-label="Novo projeto — em breve" style="--card-tone:#b9a6ff">
+              <span class="card-swap__media card-swap__media--empty" aria-hidden="true"></span><span class="card-swap__shade"></span>
+              <span class="card-swap__lock" aria-hidden="true"></span>
+              <span class="card-swap__body"><small>Em breve · Pronto para estrear</small><strong>Novo projeto</strong><span>Capa e link chegando em breve.</span></span>
+            </div>
+            <div class="card-swap__card is-locked" data-project-card data-title="Projeto Thor" role="group" aria-label="Projeto Thor — em breve" style="--card-tone:#4fc3ff">
+              <img class="card-swap__media" src="assets/projetos/thor.webp" alt="Prévia do Projeto Thor, com rosto de olhos elétricos sobre fundo de tempestade" width="960" height="1200" decoding="async" draggable="false"><span class="card-swap__shade"></span>
+              <span class="card-swap__lock" aria-hidden="true"></span>
+              <span class="card-swap__body"><small>Em breve · Em desenvolvimento</small><strong>Projeto Thor</strong><span>Um projeto elétrico está sendo construído.</span></span>
+            </div>
+            <div class="card-swap__card is-locked" data-project-card data-title="Projeto Stranger Things" role="group" aria-label="Projeto Stranger Things — em breve" style="--card-tone:#ff3b2f">
+              <img class="card-swap__media" src="assets/projetos/stranger-things.webp" alt="Prévia do Projeto Stranger Things, com quatro amigos de bicicleta sob um céu vermelho" width="960" height="1200" decoding="async" draggable="false"><span class="card-swap__shade"></span>
+              <span class="card-swap__lock" aria-hidden="true"></span>
+              <span class="card-swap__body"><small>Em breve · Em desenvolvimento</small><strong>Projeto Stranger Things</strong><span>Algo estranho está chegando ao portfólio.</span></span>
+            </div>
           </div>
           <button class="card-swap__control card-swap__control--prev" type="button" aria-label="Projeto anterior">↑</button>
           <button class="card-swap__control card-swap__control--next" type="button" aria-label="Próximo projeto">↓</button>
-          <span class="card-swap__count" aria-live="polite">01 / 08</span>
+          <span class="card-swap__count" aria-live="polite">01 / 11</span>
         </div>
       </div>
     </section>
@@ -412,6 +433,6 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="js/split-flap.js"></script>
   <script src="js/soft-aurora.js"></script>
-  <script src="js/script.js?v=4"></script>
+  <script src="js/script.js?v=5"></script>
 </body>
 </html>
