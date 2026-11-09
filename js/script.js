@@ -292,10 +292,12 @@
       var prevButton = root.querySelector('.card-swap__control--prev');
       var count = root.querySelector('.card-swap__count');
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Sempre começa pelo projeto 01 e só troca quando o visitante pedir
+      // (setas, teclado ou arrastando o card). Sem troca automática.
       var order = cards.map(function(_, index){ return index; });
-      var timer = 0;
       var dragging = null;
       var dragged = false;
+      var busy = false;
 
       function render(){
         order.forEach(function(index, position){
@@ -313,14 +315,9 @@
         if (count) count.textContent = String(order[0] + 1).padStart(2, '0') + ' / ' + String(cards.length).padStart(2, '0');
       }
 
-      function schedule(){
-        clearTimeout(timer);
-        if (reduced || document.hidden || root.matches(':hover') || dragging) return;
-        timer = window.setTimeout(function(){ shift(1); }, 4800);
-      }
-
       function shift(direction){
-        if (cards.length < 2 || dragging) return;
+        if (cards.length < 2 || dragging || busy) return;
+        busy = true;
         var front = cards[order[0]];
         front.style.transform = direction > 0 ? 'translate3d(0,120%,0) rotate(5deg)' : 'translate3d(0,-120%,0) rotate(-5deg)';
         front.style.opacity = '0';
@@ -329,8 +326,17 @@
             ? order.slice(1).concat(order[0])
             : [order[order.length - 1]].concat(order.slice(0, -1));
           render();
-          schedule();
+          busy = false;
         }, reduced ? 0 : 420);
+      }
+
+      function cancelDrag(){
+        if (!dragging) return;
+        dragging = null;
+        dragged = false;
+        root.classList.remove('is-dragging');
+        cards[order[0]].style.transition = '';
+        render();
       }
 
       function onDown(event){
@@ -338,39 +344,60 @@
         if (event.target.closest('button')) return;
         var front = cards[order[0]];
         if (!event.target.closest('[data-project-card]') || event.target.closest('[data-project-card]') !== front) return;
-        dragging = { id:event.pointerId, startX:event.clientX, startY:event.clientY, dx:0, dy:0 };
+        dragging = { id:event.pointerId, type:event.pointerType, startX:event.clientX, startY:event.clientY, dx:0, dy:0, axis:null };
         dragged = false;
-        root.classList.add('is-dragging');
         front.style.transition = 'none';
+        if (event.pointerType === 'mouse') {
+          // Impede o arraste nativo do link (no Safari ele "prendia" o card no mouse)
+          // e garante que o soltar do botão sempre chegue aqui.
+          event.preventDefault();
+          root.setPointerCapture?.(event.pointerId);
+          root.classList.add('is-dragging');
+        }
       }
 
       function onMove(event){
         if (!dragging || dragging.id !== event.pointerId) return;
-        event.preventDefault();
-        dragging.dx = event.clientX - dragging.startX;
-        dragging.dy = event.clientY - dragging.startY;
-        if (Math.hypot(dragging.dx, dragging.dy) > 5) dragged = true;
-        var front = cards[order[0]];
-        front.style.transform = 'translate3d(' + dragging.dx + 'px,' + dragging.dy + 'px,0) rotate(' + (dragging.dx * .025) + 'deg)';
+        var isMouse = dragging.type === 'mouse';
+        // Segurança: se o botão do mouse já não está pressionado, não existe arraste.
+        if (isMouse && event.buttons === 0) { cancelDrag(); return; }
+        var dx = event.clientX - dragging.startX;
+        var dy = event.clientY - dragging.startY;
+        if (!isMouse) {
+          // No celular, vertical = rolar a página (card parado), horizontal = trocar projeto.
+          if (!dragging.axis) {
+            if (Math.hypot(dx, dy) < 12) return;
+            dragging.axis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
+            if (dragging.axis === 'y') { cancelDrag(); return; }
+            root.classList.add('is-dragging');
+          }
+          dy = 0;
+        }
+        dragging.dx = dx;
+        dragging.dy = dy;
+        if (Math.hypot(dx, dy) > 5) dragged = true;
+        cards[order[0]].style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + (dx * .025) + 'deg)';
       }
 
       function onUp(event){
-        if (!dragging || (event && typeof event.pointerId === 'number' && dragging.id !== event.pointerId)) return;
+        if (!dragging || dragging.id !== event.pointerId) return;
         var drag = dragging;
-        var front = cards[order[0]];
         dragging = null;
         root.classList.remove('is-dragging');
-        front.style.transition = '';
-        if (Math.hypot(drag.dx, drag.dy) > 70) shift(drag.dx < 0 || drag.dy < 0 ? 1 : -1);
+        cards[order[0]].style.transition = '';
+        var distance = Math.hypot(drag.dx, drag.dy);
+        if (event.type !== 'pointercancel' && distance > 70) shift(drag.dx < 0 || drag.dy < 0 ? 1 : -1);
         else render();
-        schedule();
         window.setTimeout(function(){ dragged = false; }, 0);
       }
 
       root.addEventListener('pointerdown', onDown);
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-      window.addEventListener('pointercancel', onUp);
+      root.addEventListener('pointermove', onMove);
+      root.addEventListener('pointerup', onUp);
+      root.addEventListener('pointercancel', onUp);
+      root.addEventListener('lostpointercapture', function(){ if (dragging && dragging.type === 'mouse') cancelDrag(); });
+      root.addEventListener('dragstart', function(event){ event.preventDefault(); });
+      window.addEventListener('blur', cancelDrag);
       root.addEventListener('click', function(event){
         if (!dragged) return;
         if (event.target.closest('[data-project-card]')) {
@@ -385,10 +412,7 @@
         if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { event.preventDefault(); shift(1); }
         if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { event.preventDefault(); shift(-1); }
       });
-      document.addEventListener('visibilitychange', schedule);
-      root.addEventListener('mouseleave', schedule);
       render();
-      schedule();
     }
     initProjectCardSwap();
 
