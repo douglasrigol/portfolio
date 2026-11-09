@@ -345,9 +345,9 @@
         if (event.pointerType === 'mouse') {
           // Impede o arraste nativo do link (no Safari ele "prendia" o card no mouse)
           // e garante que o soltar do botão sempre chegue aqui.
+          // A captura do mouse só acontece quando o arraste começa de verdade (em onMove);
+          // assim um clique simples continua abrindo o projeto.
           event.preventDefault();
-          root.setPointerCapture?.(event.pointerId);
-          root.classList.add('is-dragging');
         }
       }
 
@@ -370,7 +370,13 @@
         }
         dragging.dx = dx;
         dragging.dy = dy;
-        if (Math.hypot(dx, dy) > 5) dragged = true;
+        if (!dragged && Math.hypot(dx, dy) > 5) {
+          dragged = true;
+          if (isMouse) {
+            root.setPointerCapture?.(event.pointerId);
+            root.classList.add('is-dragging');
+          }
+        }
         cards[order[0]].style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + (dx * .025) + 'deg)';
       }
 
