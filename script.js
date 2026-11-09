@@ -330,7 +330,7 @@
         if (event.target.closest('button')) return;
         var front = cards[order[0]];
         if (!event.target.closest('[data-project-card]') || event.target.closest('[data-project-card]') !== front) return;
-        dragging = { id:event.pointerId, type:event.pointerType, startX:event.clientX, startY:event.clientY, dx:0, dy:0 };
+        dragging = { id:event.pointerId, type:event.pointerType, startX:event.clientX, startY:event.clientY, dx:0, dy:0, axis:null };
         dragged = false;
         front.style.transition = 'none';
         // No toque, não bloqueia nada: a rolagem vertical continua sendo da página.
@@ -340,15 +340,34 @@
         }
       }
 
+      function cancelDrag(){
+        var front = cards[order[0]];
+        dragging = null;
+        dragged = false;
+        front.style.transition = '';
+        render();
+      }
+
       function onMove(event){
         if (!dragging || dragging.id !== event.pointerId) return;
         var isMouse = dragging.type === 'mouse';
-        dragging.dx = event.clientX - dragging.startX;
-        // No celular o card só acompanha o dedo na horizontal.
-        dragging.dy = isMouse ? event.clientY - dragging.startY : 0;
-        if (Math.hypot(dragging.dx, dragging.dy) > 5) dragged = true;
+        var dx = event.clientX - dragging.startX;
+        var dy = event.clientY - dragging.startY;
+        if (!isMouse) {
+          // No celular, espera o dedo andar um pouco para saber a intenção:
+          // vertical = rolar a página (o card fica parado), horizontal = trocar projeto.
+          if (!dragging.axis) {
+            if (Math.hypot(dx, dy) < 12) return;
+            dragging.axis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y';
+            if (dragging.axis === 'y') { cancelDrag(); return; }
+          }
+          dy = 0;
+        }
+        dragging.dx = dx;
+        dragging.dy = dy;
+        if (Math.hypot(dx, dy) > 5) dragged = true;
         var front = cards[order[0]];
-        front.style.transform = 'translate3d(' + dragging.dx + 'px,' + dragging.dy + 'px,0) rotate(' + (dragging.dx * .025) + 'deg)';
+        front.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + (dx * .025) + 'deg)';
       }
 
       function onUp(event){
