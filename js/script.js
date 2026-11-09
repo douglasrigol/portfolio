@@ -47,18 +47,14 @@
     if (typeof Lenis !== 'undefined' && !prefersReduced) {
       lenis = new Lenis({
         autoRaf: false,
-        lerp: .12,
+        lerp: .09,
         smoothWheel: true,
-        wheelMultiplier: .85,
+        wheelMultiplier: .9,
         touchMultiplier: 1.1
       });
       lenis.on('scroll', ScrollTrigger.update);
       gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
-      gsap.ticker.lagSmoothing(1000, 16);
-      window.addEventListener('resize', function(){
-        if (typeof lenis.resize === 'function') lenis.resize();
-        ScrollTrigger.refresh();
-      });
+      gsap.ticker.lagSmoothing(0);
 
       document.querySelectorAll('a[href^="#"]').forEach(function(link){
         link.addEventListener('click', function(e){
@@ -145,7 +141,6 @@
         .to('.preloader__label', { opacity:0, duration:.15 }, '<')
         .call(function(){
           preloader.remove();
-          ScrollTrigger.refresh();
           if (lenis) lenis.start();
         }, [], '-=.05')
         .add(heroIntro(), '-=.25');
@@ -153,8 +148,8 @@
 
     if (preloader && !prefersReduced) {
       if (lenis) lenis.stop();
-      var completed = false;
       var progress = 0;
+      var completed = false;
       var resourcesReady = false;
       var windowLoaded = false;
       var preloaderStartedAt = performance.now();
@@ -399,12 +394,7 @@
       root.addEventListener('dragstart', function(event){ event.preventDefault(); });
       window.addEventListener('blur', cancelDrag);
       root.addEventListener('click', function(event){
-        if (!dragged) return;
-        if (event.target.closest('[data-project-card]')) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        dragged = false;
+        if (dragged) { event.preventDefault(); event.stopPropagation(); }
       }, true);
       nextButton?.addEventListener('click', function(){ shift(1); });
       prevButton?.addEventListener('click', function(){ shift(-1); });
@@ -447,3 +437,70 @@
     });
 
   })();
+
+/* ---------------- nav no celular: marca some ao rolar + barra inferior ---------------- */
+(function(){
+  'use strict';
+  var nav = document.querySelector('.nav');
+  var links = document.getElementById('navLinks');
+  if (!nav || !links) return;
+
+  var mobile = window.matchMedia('(max-width: 940px)');
+  var items = Array.prototype.slice.call(links.querySelectorAll('[data-nav-link]'));
+  var lastY = window.pageYOffset || 0;
+  var lockUntil = 0;
+  var ticking = false;
+
+  function update(){
+    ticking = false;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    nav.classList.toggle('nav--scrolled', y > 24);
+
+    if (!mobile.matches) {
+      nav.classList.remove('nav--hide-links');
+      lastY = y;
+      return;
+    }
+
+    var delta = y - lastY;
+    if (y < 80) {
+      nav.classList.remove('nav--hide-links');
+      lastY = y;
+    } else if (Math.abs(delta) > 6) {
+      if (delta > 0 && Date.now() > lockUntil) nav.classList.add('nav--hide-links');
+      if (delta < 0) nav.classList.remove('nav--hide-links');
+      lastY = y;
+    }
+  }
+
+  window.addEventListener('scroll', function(){
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  mobile.addEventListener ? mobile.addEventListener('change', update) : mobile.addListener(update);
+  update();
+
+  /* depois de tocar num link, a barra continua visível enquanto a página rola até a seção */
+  items.forEach(function(link){
+    link.addEventListener('click', function(){ lockUntil = Date.now() + 1800; });
+  });
+
+  /* destaca na barra a seção que está na tela e centraliza o link ativo */
+  function setActive(id){
+    items.forEach(function(link){
+      var on = link.getAttribute('href') === '#' + id;
+      link.classList.toggle('is-active', on);
+      if (on && mobile.matches) {
+        links.scrollTo({ left: link.offsetLeft - (links.clientWidth - link.offsetWidth) / 2, behavior: 'smooth' });
+      }
+    });
+  }
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){ if (entry.isIntersecting) setActive(entry.target.id); });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    items.forEach(function(link){
+      var target = document.getElementById((link.getAttribute('href') || '').slice(1));
+      if (target) observer.observe(target);
+    });
+  }
+})();
