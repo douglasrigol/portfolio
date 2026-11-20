@@ -30,6 +30,7 @@ O site reúne meus projetos, meu processo de trabalho, as ferramentas que uso e 
 
 | Projeto | Tipo | Link |
 |---|---|---|
+| Forchetta | Website · 3D + GSAP | [forchetta-restaurante.vercel.app](https://forchetta-restaurante.vercel.app) |
 | Spider-Man: Um Novo Dia | Fã-site · Front-end | [spider-man-alpha-five.vercel.app](https://spider-man-alpha-five.vercel.app) |
 | Savana Publicidade | Site institucional | [savana-publicidade.vercel.app](https://savana-publicidade.vercel.app) |
 | Céu de Origem | Landing page interativa | [ceu-de-origem-one.vercel.app](https://ceu-de-origem-one.vercel.app) |
