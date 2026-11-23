@@ -646,7 +646,9 @@
     .stat{ min-height:130px; }
   }
 
-  [data-reveal]{ will-change:transform, opacity; }
+  /* will-change permanente em centenas de elementos criava uma camada de GPU
+     para cada letra e travava a rolagem no celular; o GSAP já cuida disso
+     durante as animações */
   .scroll-float-run{ display:inline; }
   .scroll-float-word{ display:inline-block; white-space:nowrap; }
   .scroll-float-char{
@@ -654,7 +656,6 @@
     color:inherit !important;
     -webkit-text-fill-color:currentColor;
     text-shadow:inherit;
-    will-change:transform, opacity;
   }
 
   @keyframes accent-text-glow{
@@ -775,4 +776,10 @@
     .card-swap__control--prev{ grid-column:2; }
     .card-swap__count{ grid-column:3; grid-row:2; position:static; right:auto; bottom:auto; min-width:4.5em; text-align:center; }
     .card-swap__control--next{ grid-column:4; }
+  }
+
+  /* Celular: a barra flutuante de links sem desfoque de fundo (o blur era
+     recalculado a cada quadro da rolagem); o fundo quase opaco mantém o visual */
+  @media (max-width:940px){
+    .nav__links{ -webkit-backdrop-filter:none; backdrop-filter:none; background:rgba(12,6,18,.92); }
   }

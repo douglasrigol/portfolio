@@ -141,11 +141,15 @@
   var targetMouseX = 0.5;
   var targetMouseY = 0.5;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* celular: a aurora é um degradê suave, então dá para desenhar em resolução
+     menor e a 30 quadros por segundo sem diferença visível */
+  var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  var visible = true, lastDraw = 0;
 
   function resize(){
     var bounds = hero.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    pixelRatio = isTouch ? 0.6 : Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = Math.max(1, Math.round(bounds.width * pixelRatio));
     canvas.height = Math.max(1, Math.round(bounds.height * pixelRatio));
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -155,6 +159,11 @@
 
   function render(timestamp, scheduleFrame){
     if (!canvas.isConnected) return;
+    if (scheduleFrame !== false){
+      if (!visible){ frame = 0; return; }          // hero fora da tela: para de desenhar
+      if (isTouch && timestamp - lastDraw < 32){ frame = requestAnimationFrame(render); return; }
+      lastDraw = timestamp;
+    }
     if (!reduceMotion){
       mouseX += 0.05 * (targetMouseX - mouseX);
       mouseY += 0.05 * (targetMouseY - mouseY);
@@ -184,6 +193,14 @@
   gl.clearColor(0, 0, 0, 0);
   resize();
   render(performance.now());
+
+  /* só anima enquanto a hero aparece na tela */
+  if ('IntersectionObserver' in window){
+    new IntersectionObserver(function(entries){
+      visible = entries[0].isIntersecting;
+      if (visible && !frame && !reduceMotion) frame = requestAnimationFrame(render);
+    }).observe(hero);
+  }
 
   var removalObserver = new MutationObserver(function(){
     if (!hero.isConnected){

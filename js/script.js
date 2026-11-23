@@ -44,7 +44,21 @@
 
     /* ---------------- smooth scroll ---------------- */
     var lenis = null;
-    if (typeof Lenis !== 'undefined' && !prefersReduced) {
+    /* No celular (toque) a rolagem fica 100% nativa: o Lenis não suaviza o
+       toque e só somaria trabalho a cada quadro. */
+    var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (isTouch) {
+      document.querySelectorAll('a[href^="#"]').forEach(function(link){
+        link.addEventListener('click', function(e){
+          var target = document.querySelector(link.getAttribute('href'));
+          if(!target) return;
+          e.preventDefault();
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 60, behavior: prefersReduced ? 'auto' : 'smooth' });
+          closeMobileMenu();
+        });
+      });
+    }
+    if (typeof Lenis !== 'undefined' && !prefersReduced && !isTouch) {
       lenis = new Lenis({
         autoRaf: false,
         lerp: .09,
@@ -251,7 +265,6 @@
         if (chars.length) {
           gsap.fromTo(chars,
             {
-              willChange:'opacity, transform',
               opacity:0,
               yPercent:120,
               scaleY:2.3,
@@ -266,6 +279,8 @@
               duration:.48,
               stagger:.004,
               ease:'back.inOut(2)',
+              /* terminou: devolve as letras ao normal (sem camada própria na GPU) */
+              onComplete:function(){ gsap.set(chars, { clearProps:'transform,opacity,willChange' }); },
               scrollTrigger:{
                 trigger:target,
                 start:'top 94%',
