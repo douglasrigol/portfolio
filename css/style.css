@@ -739,6 +739,15 @@
     .tool-tile h3,.tool-tile p{ overflow-wrap:anywhere; }
   }
 
+  /* Celular estreito: o ícone sobe para cima do nome, assim "JavaScript",
+     "Photoshop" e "Claude Code" cabem inteiros, sem quebrar no meio da palavra */
+  @media (max-width:480px){
+    .tool-tile{ grid-template-columns:1fr; padding:1rem 1rem 1.3rem; align-content:start; }
+    .tool-tile__icon{ grid-row:auto; margin-bottom:.7rem; }
+    .tool-tile__meter{ grid-column:1; }
+    .tool-tile h3,.tool-tile p{ overflow-wrap:normal; hyphens:auto; }
+  }
+
   /* Preloader no celular: barra um pouco mais compacta para caber com folga */
   @media (max-width:600px){
     .preloader__stage{ width:min(88vw,460px); gap:1.2rem; }
