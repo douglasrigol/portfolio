@@ -40,6 +40,7 @@ O site reúne meus projetos, meu processo de trabalho, as ferramentas que uso e 
 | Professora de inglês | Site · Educação | [prof-ingles-two.vercel.app](https://prof-ingles-two.vercel.app) |
 | Moon Prism | Experiência 3D | [moon-prism.vercel.app](https://moon-prism.vercel.app) |
 | Weather | Aplicação · React + 3D | [weathernimbo.vercel.app](https://weathernimbo.vercel.app) |
+| Projeto Thor | Fã-site · 3D + GSAP | [projeto-thor.vercel.app](https://projeto-thor.vercel.app) |
 
 ## Estrutura
 
